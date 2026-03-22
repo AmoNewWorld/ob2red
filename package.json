@@ -1,0 +1,22 @@
+{
+  "name": "ob2red",
+  "version": "1.0.0",
+  "description": "Export Obsidian notes to Xiaohongshu images with smart pagination",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": ["obsidian", "xiaohongshu", "export", "image"],
+  "author": "jianghaibo",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "builtin-modules": "^3.3.0",
+    "esbuild": "^0.25.0",
+    "marked": "^17.0.4",
+    "html2canvas": "^1.4.1",
+    "obsidian": "latest",
+    "typescript": "^5.8.0"
+  }
+}

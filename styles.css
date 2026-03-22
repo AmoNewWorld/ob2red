@@ -1,0 +1,157 @@
+/* Ob2Red Plugin Styles — Sidebar View */
+
+/* View container */
+.ob2red-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Controls bar */
+.ob2red-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.ob2red-control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ob2red-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 32px;
+}
+
+.ob2red-select {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+/* Thumbnail grid */
+.ob2red-thumbnails {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  max-height: 220px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.ob2red-thumb {
+  cursor: pointer;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+  text-align: center;
+}
+
+.ob2red-thumb canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+
+.ob2red-thumb-active {
+  border-color: var(--interactive-accent);
+}
+
+.ob2red-thumb:hover {
+  border-color: var(--interactive-accent-hover);
+}
+
+.ob2red-thumb-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 2px 0;
+  line-height: 1.2;
+}
+
+/* Preview area */
+.ob2red-preview {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 12px;
+  overflow-y: auto;
+  background: var(--background-secondary);
+  min-height: 0;
+}
+
+.ob2red-preview-canvas {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Footer */
+.ob2red-footer {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.ob2red-export-btn {
+  flex: 1;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ob2red-export-one {
+  background: var(--background-modifier-border);
+  color: var(--text-normal);
+}
+
+.ob2red-export-one:hover {
+  background: var(--background-modifier-border-hover);
+}
+
+.ob2red-export-btn:hover {
+  background: var(--interactive-accent-hover);
+}
+
+.ob2red-export-one:hover {
+  background: var(--background-modifier-border-hover);
+}
+
+/* Empty state */
+.ob2red-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 20px;
+  text-align: center;
+}

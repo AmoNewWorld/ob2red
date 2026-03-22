@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build (main.js is committed as release artifact)
+# main.js is kept in repo for Obsidian compatibility
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug
+*.log
+
+# Test files
+test-*.md
+output/
+output-overflow/
+ob2red.mjs
+docs/
+
+# Temp images
+*.jpeg
+*.png
+src/icon-preview.svg
