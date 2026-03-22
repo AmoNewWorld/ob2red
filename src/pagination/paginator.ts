@@ -10,58 +10,64 @@ export function paginate(
 ): ContentBlock[][] {
   const pages: ContentBlock[][] = [];
   let currentPage: ContentBlock[] = [];
-  let currentHeight = 0;
+
+  /** Measure the real rendered height of the current page's blocks combined */
+  function currentPageHeight(): number {
+    if (currentPage.length === 0) return 0;
+    return measurer.measureCombined(currentPage.map(b => b.html));
+  }
+
+  /** Check if adding a block would overflow the page */
+  function wouldOverflow(block: ContentBlock): boolean {
+    const testBlocks = [...currentPage, block];
+    return measurer.measureCombined(testBlocks.map(b => b.html)) > pageHeight;
+  }
 
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
-    const bh = block.measuredHeight;
 
     // Case 1: Fits in current page
-    if (currentHeight + bh <= pageHeight) {
+    if (!wouldOverflow(block)) {
       currentPage.push(block);
-      currentHeight += bh;
       continue;
     }
 
-    // Case 2: Doesn't fit, need new page
+    // Case 2: Doesn't fit, flush current page
     if (currentPage.length > 0) {
       const lastBlock = currentPage[currentPage.length - 1];
       if (lastBlock.keepWithNext && currentPage.length > 1) {
+        // Move orphaned heading to next page
         currentPage.pop();
-        currentHeight -= lastBlock.measuredHeight;
         pages.push(currentPage);
         currentPage = [lastBlock];
-        currentHeight = lastBlock.measuredHeight;
       } else {
         pages.push(currentPage);
         currentPage = [];
-        currentHeight = 0;
       }
     }
 
-    // Case 3: Block larger than remaining space → split
-    if (bh > pageHeight - currentHeight) {
-      const remainingHeight = pageHeight - currentHeight;
+    // Case 3: Block alone exceeds a full page → split it
+    if (block.measuredHeight > pageHeight) {
+      const remainingHeight = pageHeight - currentPageHeight();
       const subBlocks = splitOversizedBlock(block, pageHeight, measurer, remainingHeight);
       for (const sub of subBlocks) {
-        if (currentHeight + sub.measuredHeight > pageHeight && currentPage.length > 0) {
+        if (currentPage.length > 0 && wouldOverflowWith(currentPage, sub, measurer, pageHeight)) {
           pages.push(currentPage);
           currentPage = [];
-          currentHeight = 0;
         }
         currentPage.push(sub);
-        currentHeight += sub.measuredHeight;
       }
       continue;
     }
 
+    // Case 4: Block fits on a new page (after flush)
     currentPage.push(block);
-    currentHeight += bh;
   }
 
   // Flush last page
   if (currentPage.length > 0) {
-    if (currentHeight < MIN_PAGE_CONTENT && pages.length > 0) {
+    const h = currentPageHeight();
+    if (h < MIN_PAGE_CONTENT && pages.length > 0) {
       const prev = pages[pages.length - 1];
       prev.push(...currentPage);
     } else {
@@ -70,7 +76,6 @@ export function paginate(
   }
 
   // Post-process: fix orphaned headings at end of pages
-  // If a page ends with a heading (keepWithNext), move it to next page
   for (let p = 0; p < pages.length - 1; p++) {
     const page = pages[p];
     if (page.length > 1) {
@@ -83,4 +88,14 @@ export function paginate(
   }
 
   return pages;
+}
+
+function wouldOverflowWith(
+  currentPage: ContentBlock[],
+  block: ContentBlock,
+  measurer: HeightMeasurer,
+  pageHeight: number
+): boolean {
+  const testBlocks = [...currentPage, block];
+  return measurer.measureCombined(testBlocks.map(b => b.html)) > pageHeight;
 }

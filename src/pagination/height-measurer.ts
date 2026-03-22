@@ -25,6 +25,18 @@ export class HeightMeasurer {
     return h;
   }
 
+  /**
+   * Measure the combined height of multiple HTML blocks rendered together.
+   * This accounts for CSS margin collapsing between adjacent elements,
+   * giving a more accurate height than summing individual measurements.
+   */
+  measureCombined(htmlBlocks: string[]): number {
+    this.wrapper.innerHTML = htmlBlocks.join('\n');
+    const h = Math.ceil(this.wrapper.getBoundingClientRect().height);
+    this.wrapper.innerHTML = '';
+    return h;
+  }
+
   destroy(): void {
     if (this.container.parentNode) {
       document.body.removeChild(this.container);

@@ -9439,6 +9439,17 @@ var HeightMeasurer = class {
     this.wrapper.innerHTML = "";
     return h;
   }
+  /**
+   * Measure the combined height of multiple HTML blocks rendered together.
+   * This accounts for CSS margin collapsing between adjacent elements,
+   * giving a more accurate height than summing individual measurements.
+   */
+  measureCombined(htmlBlocks) {
+    this.wrapper.innerHTML = htmlBlocks.join("\n");
+    const h = Math.ceil(this.wrapper.getBoundingClientRect().height);
+    this.wrapper.innerHTML = "";
+    return h;
+  }
   destroy() {
     if (this.container.parentNode) {
       document.body.removeChild(this.container);
@@ -9701,48 +9712,48 @@ function splitBlockquote(block, maxHeight, measurer, firstChunkMaxHeight) {
 function paginate(blocks, pageHeight, measurer) {
   const pages = [];
   let currentPage = [];
-  let currentHeight = 0;
+  function currentPageHeight() {
+    if (currentPage.length === 0) return 0;
+    return measurer.measureCombined(currentPage.map((b2) => b2.html));
+  }
+  function wouldOverflow(block) {
+    const testBlocks = [...currentPage, block];
+    return measurer.measureCombined(testBlocks.map((b2) => b2.html)) > pageHeight;
+  }
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
-    const bh = block.measuredHeight;
-    if (currentHeight + bh <= pageHeight) {
+    if (!wouldOverflow(block)) {
       currentPage.push(block);
-      currentHeight += bh;
       continue;
     }
     if (currentPage.length > 0) {
       const lastBlock = currentPage[currentPage.length - 1];
       if (lastBlock.keepWithNext && currentPage.length > 1) {
         currentPage.pop();
-        currentHeight -= lastBlock.measuredHeight;
         pages.push(currentPage);
         currentPage = [lastBlock];
-        currentHeight = lastBlock.measuredHeight;
       } else {
         pages.push(currentPage);
         currentPage = [];
-        currentHeight = 0;
       }
     }
-    if (bh > pageHeight - currentHeight) {
-      const remainingHeight = pageHeight - currentHeight;
+    if (block.measuredHeight > pageHeight) {
+      const remainingHeight = pageHeight - currentPageHeight();
       const subBlocks = splitOversizedBlock(block, pageHeight, measurer, remainingHeight);
       for (const sub of subBlocks) {
-        if (currentHeight + sub.measuredHeight > pageHeight && currentPage.length > 0) {
+        if (currentPage.length > 0 && wouldOverflowWith(currentPage, sub, measurer, pageHeight)) {
           pages.push(currentPage);
           currentPage = [];
-          currentHeight = 0;
         }
         currentPage.push(sub);
-        currentHeight += sub.measuredHeight;
       }
       continue;
     }
     currentPage.push(block);
-    currentHeight += bh;
   }
   if (currentPage.length > 0) {
-    if (currentHeight < MIN_PAGE_CONTENT && pages.length > 0) {
+    const h = currentPageHeight();
+    if (h < MIN_PAGE_CONTENT && pages.length > 0) {
       const prev = pages[pages.length - 1];
       prev.push(...currentPage);
     } else {
@@ -9760,6 +9771,10 @@ function paginate(blocks, pageHeight, measurer) {
     }
   }
   return pages;
+}
+function wouldOverflowWith(currentPage, block, measurer, pageHeight) {
+  const testBlocks = [...currentPage, block];
+  return measurer.measureCombined(testBlocks.map((b2) => b2.html)) > pageHeight;
 }
 
 // src/renderer/page-renderer.ts
