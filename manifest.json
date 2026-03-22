@@ -3,7 +3,7 @@
   "name": "Ob2Red",
   "version": "1.0.0",
   "minAppVersion": "1.0.0",
-  "description": "Export Obsidian notes to Xiaohongshu (小红书) images with smart pagination",
+  "description": "Export notes to Xiaohongshu (小红书) images with smart pagination",
   "author": "jianghaibo",
   "isDesktopOnly": true
 }
