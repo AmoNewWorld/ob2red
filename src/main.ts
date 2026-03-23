@@ -23,14 +23,14 @@ export default class Ob2RedPlugin extends Plugin {
     // Command palette
     this.addCommand({
       id: 'export-to-xiaohongshu',
-      name: 'Export to Xiaohongshu images',
+      name: 'Export to xiaohongshu images',
       callback: () => {
         void this.activateView();
       },
     });
 
     // Ribbon icon
-    this.addRibbonIcon('ob2red-camera', 'Ob2Red: Preview Xiaohongshu images', () => {
+    this.addRibbonIcon('ob2red-camera', 'Preview xiaohongshu images', () => {
       void this.activateView();
     });
 

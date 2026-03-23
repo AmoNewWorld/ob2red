@@ -55,7 +55,7 @@ export class PreviewView extends ItemView {
   }
 
   getDisplayText(): string {
-    return 'Ob2Red preview';
+    return 'Ob2red preview';
   }
 
   getIcon(): string {
@@ -140,6 +140,7 @@ export class PreviewView extends ItemView {
   }
 
   async onClose() {
+    await super.onClose();
     this.contentEl.empty();
     this.pageElements = [];
     this.thumbCache.clear();

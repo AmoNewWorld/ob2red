@@ -8053,7 +8053,7 @@ var Ob2RedSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian.Setting(containerEl).setName("Ob2Red settings").setHeading();
+    new import_obsidian.Setting(containerEl).setName("General").setHeading();
     const themes = getAllThemes();
     new import_obsidian.Setting(containerEl).setName("\u4E3B\u9898").setDesc("\u9009\u62E9\u5BFC\u51FA\u56FE\u7247\u7684\u89C6\u89C9\u4E3B\u9898").addDropdown((dd) => {
       for (const theme of themes) {
@@ -9988,7 +9988,7 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
     return VIEW_TYPE_OB2RED;
   }
   getDisplayText() {
-    return "Ob2Red preview";
+    return "Ob2red preview";
   }
   getIcon() {
     return "ob2red-camera";
@@ -10049,6 +10049,7 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
     await this.refreshFromActiveFile();
   }
   async onClose() {
+    await super.onClose();
     this.contentEl.empty();
     this.pageElements = [];
     this.thumbCache.clear();
@@ -10350,12 +10351,12 @@ var Ob2RedPlugin = class extends import_obsidian3.Plugin {
     );
     this.addCommand({
       id: "export-to-xiaohongshu",
-      name: "Export to Xiaohongshu images",
+      name: "Export to xiaohongshu images",
       callback: () => {
         void this.activateView();
       }
     });
-    this.addRibbonIcon("ob2red-camera", "Ob2Red: Preview Xiaohongshu images", () => {
+    this.addRibbonIcon("ob2red-camera", "Preview xiaohongshu images", () => {
       void this.activateView();
     });
     this.registerEvent(

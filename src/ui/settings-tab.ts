@@ -15,7 +15,7 @@ export class Ob2RedSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    new Setting(containerEl).setName('Ob2Red settings').setHeading();
+    new Setting(containerEl).setName('General').setHeading();
 
     // Theme
     const themes = getAllThemes();

@@ -1,5 +1,4 @@
 import { ExportConfig } from '../types';
-import { escapeHTML } from '../utils/escape-html';
 
 export function createCoverElement(config: ExportConfig, coverCSS: string, themeCSS: string): HTMLDivElement {
   const page = document.createElement('div');
