@@ -9,7 +9,7 @@ import { createPageElement } from '../renderer/page-renderer';
 import { createCoverElement } from '../renderer/cover-page';
 import { createEndPageElement } from '../renderer/end-page';
 import { captureElementAsBlob, captureElementAsCanvas } from '../exporter/image-exporter';
-import { pickExportDirectory, saveBlob } from '../exporter/file-saver';
+import { pickExportDirectory, saveBlob, joinPath } from '../exporter/file-saver';
 import { parseFrontmatterOverrides } from '../utils/frontmatter';
 import type Ob2RedPlugin from '../main';
 
@@ -55,7 +55,7 @@ export class PreviewView extends ItemView {
   }
 
   getDisplayText(): string {
-    return 'Ob2Red 预览';
+    return 'Ob2Red preview';
   }
 
   getIcon(): string {
@@ -68,8 +68,8 @@ export class PreviewView extends ItemView {
     contentEl.addClass('ob2red-view');
 
     // Header action button
-    this.addAction('refresh-cw', '刷新预览', () => {
-      this.refreshFromActiveFile();
+    this.addAction('refresh-cw', 'Refresh preview', () => {
+      void this.refreshFromActiveFile();
     });
 
     // Controls
@@ -85,7 +85,7 @@ export class PreviewView extends ItemView {
     this.themeSelect.addEventListener('change', () => {
       this.currentTheme = this.themeSelect.value as ThemeName;
       this.thumbCache.clear();
-      this.refreshFromActiveFile();
+      void this.refreshFromActiveFile();
     });
 
     const sizeGroup = this.controlsEl.createDiv({ cls: 'ob2red-control-group' });
@@ -97,7 +97,7 @@ export class PreviewView extends ItemView {
     this.sizeSelect.addEventListener('change', () => {
       this.currentSize = this.sizeSelect.value as ImageSizeName;
       this.thumbCache.clear();
-      this.refreshFromActiveFile();
+      void this.refreshFromActiveFile();
     });
 
     // Thumbnails
@@ -109,9 +109,9 @@ export class PreviewView extends ItemView {
     // Footer
     this.footerEl = contentEl.createDiv({ cls: 'ob2red-footer' });
     const exportOneBtn = this.footerEl.createEl('button', { text: '导出当前页', cls: 'ob2red-export-btn ob2red-export-one' });
-    exportOneBtn.addEventListener('click', () => this.exportCurrent());
+    exportOneBtn.addEventListener('click', () => void this.exportCurrent());
     const exportAllBtn = this.footerEl.createEl('button', { text: '导出全部', cls: 'ob2red-export-btn' });
-    exportAllBtn.addEventListener('click', () => this.exportAll());
+    exportAllBtn.addEventListener('click', () => void this.exportAll());
 
     // Empty state
     this.statusEl = contentEl.createDiv({ cls: 'ob2red-empty' });
@@ -122,7 +122,7 @@ export class PreviewView extends ItemView {
       this.app.workspace.on('active-leaf-change', (leaf) => {
         if (leaf?.view instanceof PreviewView) return;
         this.thumbCache.clear();
-        this.refreshFromActiveFile();
+        void this.refreshFromActiveFile();
       })
     );
 
@@ -136,7 +136,7 @@ export class PreviewView extends ItemView {
     );
 
     // Initial render
-    this.refreshFromActiveFile();
+    await this.refreshFromActiveFile();
   }
 
   async onClose() {
@@ -348,7 +348,7 @@ export class PreviewView extends ItemView {
         this.selectedIndex = idx;
         this.thumbnailContainer?.querySelectorAll('.ob2red-thumb').forEach(t => t.removeClass('ob2red-thumb-active'));
         thumb.addClass('ob2red-thumb-active');
-        this.renderPreview(idx);
+        void this.renderPreview(idx);
       });
     }
   }
@@ -396,7 +396,6 @@ export class PreviewView extends ItemView {
       return;
     }
 
-    const path = require('path');
     const config = this.getCurrentConfig();
     const i = this.selectedIndex;
 
@@ -427,7 +426,7 @@ export class PreviewView extends ItemView {
       filename = `${baseName}_${String(i).padStart(2, '0')}.png`;
     }
 
-    await saveBlob(blob, path.join(dir, filename));
+    await saveBlob(blob, joinPath(dir, filename));
     new Notice(`已导出: ${filename}`);
   }
 
@@ -443,7 +442,6 @@ export class PreviewView extends ItemView {
       return;
     }
 
-    const path = require('path');
     const config = this.getCurrentConfig();
 
     const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -476,7 +474,7 @@ export class PreviewView extends ItemView {
         filename = `${baseName}_${String(i).padStart(2, '0')}.png`;
       }
 
-      await saveBlob(blob, path.join(dir, filename));
+      await saveBlob(blob, joinPath(dir, filename));
     }
 
     new Notice(`已导出 ${this.pageElements.length} 张图片到 ${dir}`);

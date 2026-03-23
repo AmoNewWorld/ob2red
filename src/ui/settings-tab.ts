@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import type Ob2RedPlugin from '../main';
+import { ThemeName, ImageSizeName } from '../types';
 import { getAllThemes } from '../themes/theme-manager';
 
 export class Ob2RedSettingTab extends PluginSettingTab {
@@ -14,7 +15,7 @@ export class Ob2RedSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: 'Ob2Red 设置' });
+    new Setting(containerEl).setName('Ob2Red settings').setHeading();
 
     // Theme
     const themes = getAllThemes();
@@ -27,7 +28,7 @@ export class Ob2RedSettingTab extends PluginSettingTab {
         }
         dd.setValue(this.plugin.settings.theme);
         dd.onChange(async (value) => {
-          this.plugin.settings.theme = value as any;
+          this.plugin.settings.theme = value as ThemeName;
           await this.plugin.saveSettings();
         });
       });
@@ -41,7 +42,7 @@ export class Ob2RedSettingTab extends PluginSettingTab {
         dd.addOption('1080x1920', '1080 × 1920 (9:16 手机全屏)');
         dd.setValue(this.plugin.settings.imageSize);
         dd.onChange(async (value) => {
-          this.plugin.settings.imageSize = value as any;
+          this.plugin.settings.imageSize = value as ImageSizeName;
           await this.plugin.saveSettings();
         });
       });

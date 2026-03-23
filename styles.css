@@ -144,6 +144,28 @@
   background: var(--background-modifier-border-hover);
 }
 
+/* Off-screen rendering container */
+.ob2red-offscreen {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+}
+
+/* Code block inline overrides for html2canvas */
+.ob2red-page-content pre {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow: hidden;
+}
+
+.ob2red-page-content pre code {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  display: block;
+  font-family: "SF Mono", "Fira Code", "Consolas", "Courier New", monospace;
+  color: #cdd6f4;
+}
+
 /* Empty state */
 .ob2red-empty {
   flex: 1;

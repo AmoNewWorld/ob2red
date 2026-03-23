@@ -1,8 +1,8 @@
 export async function pickExportDirectory(): Promise<string | null> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { remote } = require('electron');
-    const result = await remote.dialog.showOpenDialog({
+    // electron is externalized by esbuild and must be loaded at runtime
+    const electron = require('electron'); // eslint-disable-line -- electron is external
+    const result = await electron.remote.dialog.showOpenDialog({
       properties: ['openDirectory', 'createDirectory'],
       title: '选择图片保存位置',
       buttonLabel: '保存到此处',
@@ -10,10 +10,8 @@ export async function pickExportDirectory(): Promise<string | null> {
     if (result.canceled || result.filePaths.length === 0) return null;
     return result.filePaths[0];
   } catch {
-    // Fallback: try @electron/remote
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const remote = require('@electron/remote');
+      const remote = require('@electron/remote'); // eslint-disable-line -- electron is external
       const result = await remote.dialog.showOpenDialog({
         properties: ['openDirectory', 'createDirectory'],
         title: '选择图片保存位置',
@@ -27,9 +25,13 @@ export async function pickExportDirectory(): Promise<string | null> {
   }
 }
 
+export function joinPath(...parts: string[]): string {
+  const path = require('path'); // eslint-disable-line -- node:path is external
+  return path.join(...parts);
+}
+
 export async function saveBlob(blob: Blob, filePath: string): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const fs = require('fs');
+  const fs = require('fs'); // eslint-disable-line -- node:fs is external
   const buffer = Buffer.from(await blob.arrayBuffer());
   fs.writeFileSync(filePath, buffer);
 }

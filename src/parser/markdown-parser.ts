@@ -109,15 +109,15 @@ export function parseMarkdownToBlocks(md: string): ContentBlock[] {
         html = calloutResult.html;
         blockType = 'callout';
       } else {
-        html = marked.parser([token] as any);
+        html = marked.parser([token] as Parameters<typeof marked.parser>[0]);
       }
     } else {
-      html = marked.parser([token] as any);
+      html = marked.parser([token] as Parameters<typeof marked.parser>[0]);
     }
 
     blocks.push({
       type: blockType,
-      depth: (token as any).depth || 0,
+      depth: ('depth' in token ? token.depth : 0) as number,
       raw: token.raw,
       html,
       measuredHeight: 0,

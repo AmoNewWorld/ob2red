@@ -1,15 +1,14 @@
 import { ExportConfig } from '../types';
-import { escapeHTML } from '../utils/escape-html';
 
 export function createEndPageElement(config: ExportConfig, endCSS: string, themeCSS: string): HTMLDivElement {
   const page = document.createElement('div');
   page.className = 'ob2red-page';
-  page.style.cssText = `
-    width: ${config.pageWidth}px;
-    height: ${config.pageHeight}px;
-    overflow: hidden;
-    position: relative;
-  `;
+  page.setCssProps({
+    'width': `${config.pageWidth}px`,
+    'height': `${config.pageHeight}px`,
+    'overflow': 'hidden',
+    'position': 'relative',
+  });
 
   const style = document.createElement('style');
   style.textContent = themeCSS + '\n' + endCSS;
@@ -17,12 +16,20 @@ export function createEndPageElement(config: ExportConfig, endCSS: string, theme
 
   const end = document.createElement('div');
   end.className = 'ob2red-end';
-  end.innerHTML = `
-    <div class="ob2red-end-thanks">感谢阅读</div>
-    <div class="ob2red-end-divider"></div>
-    <div class="ob2red-end-cta">关注我获取更多干货内容</div>
-    ${config.authorName ? `<div class="ob2red-end-author">—— ${escapeHTML(config.authorName)} ——</div>` : ''}
-  `;
+
+  const thanks = end.createDiv({ cls: 'ob2red-end-thanks' });
+  thanks.textContent = '感谢阅读';
+
+  end.createDiv({ cls: 'ob2red-end-divider' });
+
+  const cta = end.createDiv({ cls: 'ob2red-end-cta' });
+  cta.textContent = '关注我获取更多干货内容';
+
+  if (config.authorName) {
+    const author = end.createDiv({ cls: 'ob2red-end-author' });
+    author.textContent = `—— ${config.authorName} ——`;
+  }
+
   page.appendChild(end);
 
   return page;

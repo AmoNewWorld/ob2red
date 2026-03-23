@@ -7,9 +7,7 @@ export async function captureElementAsBlob(
   backgroundColor: string = '#ffffff'
 ): Promise<Blob> {
   // Append off-screen for rendering
-  element.style.position = 'fixed';
-  element.style.left = '-9999px';
-  element.style.top = '0';
+  element.addClass('ob2red-offscreen');
   document.body.appendChild(element);
 
   try {
@@ -40,9 +38,7 @@ export async function captureElementAsCanvas(
   scale: number = 0.25,
   backgroundColor: string = '#ffffff'
 ): Promise<HTMLCanvasElement> {
-  element.style.position = 'fixed';
-  element.style.left = '-9999px';
-  element.style.top = '0';
+  element.addClass('ob2red-offscreen');
   document.body.appendChild(element);
 
   try {

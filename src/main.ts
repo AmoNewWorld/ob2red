@@ -1,4 +1,4 @@
-import { Plugin, MarkdownView, Notice, Menu, TFile, addIcon, WorkspaceLeaf } from 'obsidian';
+import { Plugin, Menu, TFile, addIcon, WorkspaceLeaf } from 'obsidian';
 import { Ob2RedSettings } from './types';
 import { DEFAULT_SETTINGS, VIEW_TYPE_OB2RED } from './constants';
 import { Ob2RedSettingTab } from './ui/settings-tab';
@@ -23,15 +23,15 @@ export default class Ob2RedPlugin extends Plugin {
     // Command palette
     this.addCommand({
       id: 'export-to-xiaohongshu',
-      name: '导出为小红书图片',
+      name: 'Export to Xiaohongshu images',
       callback: () => {
-        this.activateView();
+        void this.activateView();
       },
     });
 
     // Ribbon icon
-    this.addRibbonIcon('ob2red-camera', 'Ob2Red: 预览小红书图片', () => {
-      this.activateView();
+    this.addRibbonIcon('ob2red-camera', 'Ob2Red: Preview Xiaohongshu images', () => {
+      void this.activateView();
     });
 
     // Right-click menu on file
@@ -42,7 +42,6 @@ export default class Ob2RedPlugin extends Plugin {
             item.setTitle('预览小红书图片')
               .setIcon('ob2red-camera')
               .onClick(async () => {
-                // Open the file first, then activate view
                 await this.app.workspace.openLinkText(file.path, '', false);
                 await this.activateView();
               });
@@ -57,17 +56,13 @@ export default class Ob2RedPlugin extends Plugin {
         menu.addItem((item) => {
           item.setTitle('预览小红书图片')
             .setIcon('ob2red-camera')
-            .onClick(() => this.activateView());
+            .onClick(() => void this.activateView());
         });
       })
     );
 
     // Settings tab
     this.addSettingTab(new Ob2RedSettingTab(this.app, this));
-  }
-
-  onunload() {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_OB2RED);
   }
 
   async loadSettings() {
@@ -81,21 +76,19 @@ export default class Ob2RedPlugin extends Plugin {
   async activateView() {
     const { workspace } = this.app;
 
-    // Check if view already exists
-    let leaves = workspace.getLeavesOfType(VIEW_TYPE_OB2RED);
+    const leaves = workspace.getLeavesOfType(VIEW_TYPE_OB2RED);
     if (leaves.length > 0) {
-      workspace.revealLeaf(leaves[0]);
+      void workspace.revealLeaf(leaves[0]);
       return;
     }
 
-    // Open in right sidebar
     const leaf = workspace.getRightLeaf(false);
     if (leaf) {
       await leaf.setViewState({
         type: VIEW_TYPE_OB2RED,
         active: true,
       });
-      workspace.revealLeaf(leaf);
+      void workspace.revealLeaf(leaf);
     }
   }
 }

@@ -8053,7 +8053,7 @@ var Ob2RedSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Ob2Red \u8BBE\u7F6E" });
+    new import_obsidian.Setting(containerEl).setName("Ob2Red settings").setHeading();
     const themes = getAllThemes();
     new import_obsidian.Setting(containerEl).setName("\u4E3B\u9898").setDesc("\u9009\u62E9\u5BFC\u51FA\u56FE\u7247\u7684\u89C6\u89C9\u4E3B\u9898").addDropdown((dd) => {
       for (const theme of themes) {
@@ -9402,7 +9402,7 @@ function parseMarkdownToBlocks(md) {
     }
     blocks.push({
       type: blockType,
-      depth: token.depth || 0,
+      depth: "depth" in token ? token.depth : 0,
       raw: token.raw,
       html,
       measuredHeight: 0,
@@ -9423,8 +9423,8 @@ function extractTitle(md) {
 var HeightMeasurer = class {
   constructor(contentWidth, themeCSS) {
     this.container = document.createElement("div");
-    this.container.style.cssText = `position:fixed;visibility:hidden;left:-9999px;top:0;width:${contentWidth}px;`;
-    this.container.className = "ob2red-measure-root";
+    this.container.className = "ob2red-measure-root ob2red-offscreen";
+    this.container.setCssProps({ "width": `${contentWidth}px` });
     const style = document.createElement("style");
     style.textContent = themeCSS;
     this.container.appendChild(style);
@@ -9439,11 +9439,6 @@ var HeightMeasurer = class {
     this.wrapper.innerHTML = "";
     return h;
   }
-  /**
-   * Measure the combined height of multiple HTML blocks rendered together.
-   * This accounts for CSS margin collapsing between adjacent elements,
-   * giving a more accurate height than summing individual measurements.
-   */
   measureCombined(htmlBlocks) {
     this.wrapper.innerHTML = htmlBlocks.join("\n");
     const h = Math.ceil(this.wrapper.getBoundingClientRect().height);
@@ -9781,76 +9776,63 @@ function wouldOverflowWith(currentPage, block, measurer, pageHeight) {
 function createPageElement(blocks, config, themeCSS) {
   const page = document.createElement("div");
   page.className = "ob2red-page";
-  page.style.cssText = `
-    width: ${config.pageWidth}px;
-    height: ${config.pageHeight}px;
-    overflow: hidden;
-    position: relative;
-    background: #ffffff;
-  `;
+  page.setCssProps({
+    "width": `${config.pageWidth}px`,
+    "height": `${config.pageHeight}px`,
+    "overflow": "hidden",
+    "position": "relative",
+    "background": "#ffffff"
+  });
   const style = document.createElement("style");
   style.textContent = themeCSS;
   page.appendChild(style);
   const content = document.createElement("div");
   content.className = "ob2red-page-content";
-  content.style.cssText = `
-    padding: ${PADDING.top}px ${PADDING.right}px ${PADDING.bottom}px ${PADDING.left}px;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  `;
-  content.innerHTML = blocks.map((b2) => b2.html).join("\n");
-  applyCodeBlockInlineStyles(content);
-  page.appendChild(content);
-  return page;
-}
-function applyCodeBlockInlineStyles(container) {
-  const preElements = container.querySelectorAll("pre");
-  for (const pre of Array.from(preElements)) {
-    const el = pre;
-    el.style.whiteSpace = "pre-wrap";
-    el.style.wordWrap = "break-word";
-    el.style.overflow = "hidden";
-    const codeEl = el.querySelector("code");
-    if (codeEl) {
-      codeEl.style.whiteSpace = "pre-wrap";
-      codeEl.style.wordWrap = "break-word";
-      codeEl.style.display = "block";
-      codeEl.style.fontFamily = '"SF Mono", "Fira Code", "Consolas", "Courier New", monospace';
-      if (!codeEl.style.color) {
-        codeEl.style.color = "#cdd6f4";
-      }
+  content.setCssProps({
+    "padding": `${PADDING.top}px ${PADDING.right}px ${PADDING.bottom}px ${PADDING.left}px`,
+    "width": "100%",
+    "height": "100%",
+    "overflow": "hidden"
+  });
+  for (const b2 of blocks) {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = b2.html;
+    while (wrapper.firstChild) {
+      content.appendChild(wrapper.firstChild);
     }
   }
-}
-
-// src/utils/escape-html.ts
-function escapeHTML(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  page.appendChild(content);
+  return page;
 }
 
 // src/renderer/cover-page.ts
 function createCoverElement(config, coverCSS, themeCSS) {
   const page = document.createElement("div");
   page.className = "ob2red-page";
-  page.style.cssText = `
-    width: ${config.pageWidth}px;
-    height: ${config.pageHeight}px;
-    overflow: hidden;
-    position: relative;
-  `;
+  page.setCssProps({
+    "width": `${config.pageWidth}px`,
+    "height": `${config.pageHeight}px`,
+    "overflow": "hidden",
+    "position": "relative"
+  });
   const style = document.createElement("style");
   style.textContent = themeCSS + "\n" + coverCSS;
   page.appendChild(style);
   const cover = document.createElement("div");
   cover.className = "ob2red-cover";
-  cover.innerHTML = `
-    <div class="ob2red-cover-title">${escapeHTML(config.title)}</div>
-    <div class="ob2red-cover-divider"></div>
-    ${config.coverSubtitle ? `<div class="ob2red-cover-subtitle">${escapeHTML(config.coverSubtitle)}</div>` : ""}
-    ${config.authorName ? `<div class="ob2red-cover-author">${escapeHTML(config.authorName)}</div>` : ""}
-    <div class="ob2red-cover-meta">${config.date}</div>
-  `;
+  const title = cover.createDiv({ cls: "ob2red-cover-title" });
+  title.textContent = config.title;
+  cover.createDiv({ cls: "ob2red-cover-divider" });
+  if (config.coverSubtitle) {
+    const subtitle = cover.createDiv({ cls: "ob2red-cover-subtitle" });
+    subtitle.textContent = config.coverSubtitle;
+  }
+  if (config.authorName) {
+    const author = cover.createDiv({ cls: "ob2red-cover-author" });
+    author.textContent = config.authorName;
+  }
+  const meta = cover.createDiv({ cls: "ob2red-cover-meta" });
+  meta.textContent = config.date;
   page.appendChild(cover);
   return page;
 }
@@ -9859,23 +9841,26 @@ function createCoverElement(config, coverCSS, themeCSS) {
 function createEndPageElement(config, endCSS, themeCSS) {
   const page = document.createElement("div");
   page.className = "ob2red-page";
-  page.style.cssText = `
-    width: ${config.pageWidth}px;
-    height: ${config.pageHeight}px;
-    overflow: hidden;
-    position: relative;
-  `;
+  page.setCssProps({
+    "width": `${config.pageWidth}px`,
+    "height": `${config.pageHeight}px`,
+    "overflow": "hidden",
+    "position": "relative"
+  });
   const style = document.createElement("style");
   style.textContent = themeCSS + "\n" + endCSS;
   page.appendChild(style);
   const end = document.createElement("div");
   end.className = "ob2red-end";
-  end.innerHTML = `
-    <div class="ob2red-end-thanks">\u611F\u8C22\u9605\u8BFB</div>
-    <div class="ob2red-end-divider"></div>
-    <div class="ob2red-end-cta">\u5173\u6CE8\u6211\u83B7\u53D6\u66F4\u591A\u5E72\u8D27\u5185\u5BB9</div>
-    ${config.authorName ? `<div class="ob2red-end-author">\u2014\u2014 ${escapeHTML(config.authorName)} \u2014\u2014</div>` : ""}
-  `;
+  const thanks = end.createDiv({ cls: "ob2red-end-thanks" });
+  thanks.textContent = "\u611F\u8C22\u9605\u8BFB";
+  end.createDiv({ cls: "ob2red-end-divider" });
+  const cta = end.createDiv({ cls: "ob2red-end-cta" });
+  cta.textContent = "\u5173\u6CE8\u6211\u83B7\u53D6\u66F4\u591A\u5E72\u8D27\u5185\u5BB9";
+  if (config.authorName) {
+    const author = end.createDiv({ cls: "ob2red-end-author" });
+    author.textContent = `\u2014\u2014 ${config.authorName} \u2014\u2014`;
+  }
   page.appendChild(end);
   return page;
 }
@@ -9883,9 +9868,7 @@ function createEndPageElement(config, endCSS, themeCSS) {
 // src/exporter/image-exporter.ts
 var import_html2canvas = __toESM(require_html2canvas());
 async function captureElementAsBlob(element, width, height, backgroundColor = "#ffffff") {
-  element.style.position = "fixed";
-  element.style.left = "-9999px";
-  element.style.top = "0";
+  element.addClass("ob2red-offscreen");
   document.body.appendChild(element);
   try {
     const canvas = await (0, import_html2canvas.default)(element, {
@@ -9907,9 +9890,7 @@ async function captureElementAsBlob(element, width, height, backgroundColor = "#
   }
 }
 async function captureElementAsCanvas(element, width, height, scale = 0.25, backgroundColor = "#ffffff") {
-  element.style.position = "fixed";
-  element.style.left = "-9999px";
-  element.style.top = "0";
+  element.addClass("ob2red-offscreen");
   document.body.appendChild(element);
   try {
     return await (0, import_html2canvas.default)(element, {
@@ -9928,8 +9909,8 @@ async function captureElementAsCanvas(element, width, height, scale = 0.25, back
 // src/exporter/file-saver.ts
 async function pickExportDirectory() {
   try {
-    const { remote } = require("electron");
-    const result = await remote.dialog.showOpenDialog({
+    const electron = require("electron");
+    const result = await electron.remote.dialog.showOpenDialog({
       properties: ["openDirectory", "createDirectory"],
       title: "\u9009\u62E9\u56FE\u7247\u4FDD\u5B58\u4F4D\u7F6E",
       buttonLabel: "\u4FDD\u5B58\u5230\u6B64\u5904"
@@ -9950,6 +9931,10 @@ async function pickExportDirectory() {
       return null;
     }
   }
+}
+function joinPath(...parts) {
+  const path = require("path");
+  return path.join(...parts);
 }
 async function saveBlob(blob, filePath) {
   const fs = require("fs");
@@ -10003,7 +9988,7 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
     return VIEW_TYPE_OB2RED;
   }
   getDisplayText() {
-    return "Ob2Red \u9884\u89C8";
+    return "Ob2Red preview";
   }
   getIcon() {
     return "ob2red-camera";
@@ -10012,8 +9997,8 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.addClass("ob2red-view");
-    this.addAction("refresh-cw", "\u5237\u65B0\u9884\u89C8", () => {
-      this.refreshFromActiveFile();
+    this.addAction("refresh-cw", "Refresh preview", () => {
+      void this.refreshFromActiveFile();
     });
     this.controlsEl = contentEl.createDiv({ cls: "ob2red-controls" });
     const themeGroup = this.controlsEl.createDiv({ cls: "ob2red-control-group" });
@@ -10026,7 +10011,7 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
     this.themeSelect.addEventListener("change", () => {
       this.currentTheme = this.themeSelect.value;
       this.thumbCache.clear();
-      this.refreshFromActiveFile();
+      void this.refreshFromActiveFile();
     });
     const sizeGroup = this.controlsEl.createDiv({ cls: "ob2red-control-group" });
     sizeGroup.createSpan({ text: "\u5C3A\u5BF8", cls: "ob2red-label" });
@@ -10037,22 +10022,22 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
     this.sizeSelect.addEventListener("change", () => {
       this.currentSize = this.sizeSelect.value;
       this.thumbCache.clear();
-      this.refreshFromActiveFile();
+      void this.refreshFromActiveFile();
     });
     this.thumbnailContainer = contentEl.createDiv({ cls: "ob2red-thumbnails" });
     this.previewContainer = contentEl.createDiv({ cls: "ob2red-preview" });
     this.footerEl = contentEl.createDiv({ cls: "ob2red-footer" });
     const exportOneBtn = this.footerEl.createEl("button", { text: "\u5BFC\u51FA\u5F53\u524D\u9875", cls: "ob2red-export-btn ob2red-export-one" });
-    exportOneBtn.addEventListener("click", () => this.exportCurrent());
+    exportOneBtn.addEventListener("click", () => void this.exportCurrent());
     const exportAllBtn = this.footerEl.createEl("button", { text: "\u5BFC\u51FA\u5168\u90E8", cls: "ob2red-export-btn" });
-    exportAllBtn.addEventListener("click", () => this.exportAll());
+    exportAllBtn.addEventListener("click", () => void this.exportAll());
     this.statusEl = contentEl.createDiv({ cls: "ob2red-empty" });
     this.statusEl.setText("\u6253\u5F00\u4E00\u4E2A Markdown \u7B14\u8BB0\u4EE5\u9884\u89C8\u5C0F\u7EA2\u4E66\u56FE\u7247");
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", (leaf) => {
         if ((leaf == null ? void 0 : leaf.view) instanceof _PreviewView) return;
         this.thumbCache.clear();
-        this.refreshFromActiveFile();
+        void this.refreshFromActiveFile();
       })
     );
     this.registerEvent(
@@ -10061,7 +10046,7 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
         this.debouncedThumbnailRefresh();
       })
     );
-    this.refreshFromActiveFile();
+    await this.refreshFromActiveFile();
   }
   async onClose() {
     this.contentEl.empty();
@@ -10231,7 +10216,7 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
         this.selectedIndex = idx;
         (_a2 = this.thumbnailContainer) == null ? void 0 : _a2.querySelectorAll(".ob2red-thumb").forEach((t) => t.removeClass("ob2red-thumb-active"));
         thumb.addClass("ob2red-thumb-active");
-        this.renderPreview(idx);
+        void this.renderPreview(idx);
       });
     }
   }
@@ -10273,7 +10258,6 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
       new import_obsidian2.Notice("\u672A\u9009\u62E9\u4FDD\u5B58\u4F4D\u7F6E");
       return;
     }
-    const path = require("path");
     const config = this.getCurrentConfig();
     const i = this.selectedIndex;
     const mdView = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
@@ -10300,7 +10284,7 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
     } else {
       filename = `${baseName}_${String(i).padStart(2, "0")}.png`;
     }
-    await saveBlob(blob, path.join(dir, filename));
+    await saveBlob(blob, joinPath(dir, filename));
     new import_obsidian2.Notice(`\u5DF2\u5BFC\u51FA: ${filename}`);
   }
   async exportAll() {
@@ -10313,7 +10297,6 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
       new import_obsidian2.Notice("\u672A\u9009\u62E9\u4FDD\u5B58\u4F4D\u7F6E");
       return;
     }
-    const path = require("path");
     const config = this.getCurrentConfig();
     const mdView = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
     let title = "Untitled";
@@ -10341,7 +10324,7 @@ var PreviewView = class _PreviewView extends import_obsidian2.ItemView {
       } else {
         filename = `${baseName}_${String(i).padStart(2, "0")}.png`;
       }
-      await saveBlob(blob, path.join(dir, filename));
+      await saveBlob(blob, joinPath(dir, filename));
     }
     new import_obsidian2.Notice(`\u5DF2\u5BFC\u51FA ${this.pageElements.length} \u5F20\u56FE\u7247\u5230 ${dir}`);
   }
@@ -10367,13 +10350,13 @@ var Ob2RedPlugin = class extends import_obsidian3.Plugin {
     );
     this.addCommand({
       id: "export-to-xiaohongshu",
-      name: "\u5BFC\u51FA\u4E3A\u5C0F\u7EA2\u4E66\u56FE\u7247",
+      name: "Export to Xiaohongshu images",
       callback: () => {
-        this.activateView();
+        void this.activateView();
       }
     });
-    this.addRibbonIcon("ob2red-camera", "Ob2Red: \u9884\u89C8\u5C0F\u7EA2\u4E66\u56FE\u7247", () => {
-      this.activateView();
+    this.addRibbonIcon("ob2red-camera", "Ob2Red: Preview Xiaohongshu images", () => {
+      void this.activateView();
     });
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
@@ -10390,14 +10373,11 @@ var Ob2RedPlugin = class extends import_obsidian3.Plugin {
     this.registerEvent(
       this.app.workspace.on("editor-menu", (menu) => {
         menu.addItem((item) => {
-          item.setTitle("\u9884\u89C8\u5C0F\u7EA2\u4E66\u56FE\u7247").setIcon("ob2red-camera").onClick(() => this.activateView());
+          item.setTitle("\u9884\u89C8\u5C0F\u7EA2\u4E66\u56FE\u7247").setIcon("ob2red-camera").onClick(() => void this.activateView());
         });
       })
     );
     this.addSettingTab(new Ob2RedSettingTab(this.app, this));
-  }
-  onunload() {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_OB2RED);
   }
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -10407,9 +10387,9 @@ var Ob2RedPlugin = class extends import_obsidian3.Plugin {
   }
   async activateView() {
     const { workspace } = this.app;
-    let leaves = workspace.getLeavesOfType(VIEW_TYPE_OB2RED);
+    const leaves = workspace.getLeavesOfType(VIEW_TYPE_OB2RED);
     if (leaves.length > 0) {
-      workspace.revealLeaf(leaves[0]);
+      void workspace.revealLeaf(leaves[0]);
       return;
     }
     const leaf = workspace.getRightLeaf(false);
@@ -10418,7 +10398,7 @@ var Ob2RedPlugin = class extends import_obsidian3.Plugin {
         type: VIEW_TYPE_OB2RED,
         active: true
       });
-      workspace.revealLeaf(leaf);
+      void workspace.revealLeaf(leaf);
     }
   }
 };

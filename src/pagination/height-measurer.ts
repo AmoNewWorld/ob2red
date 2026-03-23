@@ -4,9 +4,11 @@ export class HeightMeasurer {
 
   constructor(contentWidth: number, themeCSS: string) {
     this.container = document.createElement('div');
-    this.container.style.cssText = `position:fixed;visibility:hidden;left:-9999px;top:0;width:${contentWidth}px;`;
-    this.container.className = 'ob2red-measure-root';
+    this.container.className = 'ob2red-measure-root ob2red-offscreen';
+    this.container.setCssProps({ 'width': `${contentWidth}px` });
 
+    // Theme CSS must be injected for accurate height measurement
+    // as elements like headings, lists, callouts have theme-specific margins
     const style = document.createElement('style');
     style.textContent = themeCSS;
     this.container.appendChild(style);
@@ -19,17 +21,14 @@ export class HeightMeasurer {
   }
 
   measure(html: string): number {
+    // innerHTML is required to render pre-built HTML from markdown parser
+    // for accurate height measurement via getBoundingClientRect
     this.wrapper.innerHTML = html;
     const h = Math.ceil(this.wrapper.getBoundingClientRect().height);
     this.wrapper.innerHTML = '';
     return h;
   }
 
-  /**
-   * Measure the combined height of multiple HTML blocks rendered together.
-   * This accounts for CSS margin collapsing between adjacent elements,
-   * giving a more accurate height than summing individual measurements.
-   */
   measureCombined(htmlBlocks: string[]): number {
     this.wrapper.innerHTML = htmlBlocks.join('\n');
     const h = Math.ceil(this.wrapper.getBoundingClientRect().height);
